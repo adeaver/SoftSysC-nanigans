@@ -19,7 +19,9 @@ int setjmp_simple(jump_buf_simple *buffer) {
 	unsigned long sp;
 	// 8(%%rbp) causes stack pointer to go back to 33
 	// 7 and 9 cause segfault
-    asm("movq 8(%%rbp), %0"
+	// Just (%%rbp) and (%%rsp) cause segfaults
+	// This probably needs to be done in assembly
+    asm("movq (%%rbp), %0"
 			:"=r" (sp));
 	printf("Stack pointer: %lu\n", sp);
 	buffer->sp = (void (*)()) sp;
