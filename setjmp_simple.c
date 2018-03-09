@@ -4,27 +4,39 @@
 
 typedef struct {
 	int *data;
-	uint64_t sp;
+	void (*sp)();
 } jump_buf_simple;
 
-jump_buf_simple *buffer;
+jump_buf_simple *make_jump_buffer() {
+	jump_buf_simple *buffer = malloc(sizeof(jump_buf_simple));
+	buffer->data = malloc(sizeof(int));
+	*(buffer->data) = 0;
+	buffer->sp = 0;
+	return buffer;
+}
 
 int setjmp_simple(jump_buf_simple *buffer) {
-	uint64_t sp;
-    asm("movq %%rsp, %0"
+	unsigned long sp;
+    asm("movq 8(%%rsp), %0"
 			:"=r" (sp));
-	if (buffer == NULL) {
-		buffer = malloc(sizeof(jump_buf_simple));
-		buffer->data = malloc(sizeof(int));
-		*(buffer->data) = 0;
-	}
-	buffer->sp = sp;
+	printf("Stack pointer: %lu\n", sp);
+	buffer->sp = (void (*)()) sp;
 	int data = *(buffer->data);
 	*(buffer->data) = 0;
-	return data;	
+	return data;
 }
 
 int main() {
+	jump_buf_simple *buffer = make_jump_buffer();
 	int ret = setjmp_simple(buffer);
-	printf("%d\n", ret);
+	printf("Starting\n");
+	if(!ret) {
+		printf("Not found\n");
+		*(buffer->data) = 4;
+		buffer->sp();
+	} else {
+		printf("Found");
+	}
+	return 0;
+		
 }
