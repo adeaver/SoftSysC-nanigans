@@ -38,6 +38,7 @@ void setjmp_simple(jump_buf_simple *buffer) {
 	//buffer->sp = __builtin_return_address(0); // Alternate solution
 }
 
+// The following functions are our routines
 void routineA() {
 	puts("Starting A");
 	bufferA = make_jump_buffer(); 
@@ -71,9 +72,6 @@ void routineB() {
 	puts("This should never print");	
 }
 
-/* This function always get a segfault. We think we're overwriting the return address for
- * main somehow
- */
 int main() {
 	puts("Starting Main");
 	routineA();
