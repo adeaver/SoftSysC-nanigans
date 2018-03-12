@@ -78,4 +78,13 @@ int main() {
 	puts("Starting Main");
 	routineA();
 	puts("Finished Main");
+
+	/* The actual return address of main is two functions up
+	 * because by the time we get here, routineA has essentially
+	 * placed a copy of main onto the stack frame which has a return pointer that goes to A
+	 * which has been cleared and everything is f**ked up. So we have to go to the original main to
+	 * find the actual return address. In short, we have discovered a new paddlin'
+	 */
+	void (*foo)(void) = __builtin_return_address(2);
+	foo();	
 }
