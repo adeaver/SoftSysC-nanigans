@@ -1,7 +1,11 @@
+/*
+Final demo script of our self-built set_jmp and long_mp coroutine mechanism
+*/
 #include <stdlib.h>
 #include <stdio.h>
 #include <stdint.h>
 
+// our jmp_buffer struct which holds our "state" of the program, simplified
 typedef struct {
 	int data;
 	void (*sp)(void);
@@ -13,10 +17,11 @@ jump_buf_simple *bufferB;
 void routineA();
 void routineB();
 
-/* This function allocates a simple jump buffer
- *  
- * returns a pointer to a freshly allocated jump_buf_simple
- */
+/*
+This function allocates a simple jump buffer
+
+returns a pointer to a freshly allocated jump_buf_simple
+*/
 jump_buf_simple *make_jump_buffer() {
 	jump_buf_simple *buffer = malloc(sizeof(jump_buf_simple));
 	buffer->data = 0;
@@ -24,41 +29,45 @@ jump_buf_simple *make_jump_buffer() {
 	return buffer;
 }
 
-/* This function captures the return address to refer to 
- * as a point to come back to. Unlike the real setjmp, it does not return the value
- * for the data in the buffer. We implemented it like this because when returning
- * a value, the return address gets overwritten, so we were getting a segmentation fault. 
+/*
+This function captures the return address to refer to
+as a point to come back to. Unlike the real setjmp, it does not return the value
+for the data in the buffer. We implemented it like this because when returning
+a value, the return address gets overwritten, so we were getting a segmentation fault.
  */
 void __setjmp_simple(jump_buf_simple *buffer) {
 	uint64_t sp;
 	// It's 8(rbp) because we just allocated an 8 byte int
     asm("movq 8(%%rbp), %0"
 			:"=r" (sp));
-	puts("Inside setjmp_simple");
 	buffer->sp = sp;
 	//buffer->sp = __builtin_return_address(0); // Alternate solution
 }
 
-#define setjmp_simple(buffer, output) __setjmp_simple(buffer); output = buffer->data; buffer->data = 0; 
+// We made our set_jmp functionality into a macro to better mimic the real mechanism
+#define setjmp_simple(buffer, output) __setjmp_simple(buffer); output = buffer->data; buffer->data = 0;
 
-// The following functions are our routines
+/*
+The following functions are our routines that jump between each other to show our
+coroutine functionality
+*/
 void routineA() {
 	puts("Starting A");
 	bufferA = make_jump_buffer();
-	int val;	
+	int val;
 	setjmp_simple(bufferA, val);
 
 	if(!val) routineB();
 
-	puts("Setting B");
+	puts("Back in A, Setting B");
 	bufferB->data=1;
 	setjmp_simple(bufferA, val);
 	if(!val) bufferB->sp();
 
 	puts("Finished A");
-	
+
 	void (*foo)(void) = __builtin_return_address(1);
-	foo();	
+	foo();
 }
 
 void routineB() {
@@ -73,10 +82,13 @@ void routineB() {
 	puts("Finished B, Setting A");
 	bufferA->data = 1;
 	bufferA->sp();
-	
-	puts("This should never print");	
+
+	puts("This should never print");
 }
 
+/*
+Main function that calls the coroutine, starting with A and jumping back and forth
+*/
 int main() {
 	puts("Starting Main");
 	routineA();
@@ -89,5 +101,5 @@ int main() {
 	 * find the actual return address. In short, we have discovered a new paddlin'
 	 */
 	void (*foo)(void) = __builtin_return_address(2);
-	foo();	
+	foo();
 }
