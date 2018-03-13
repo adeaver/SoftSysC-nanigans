@@ -29,7 +29,7 @@ We worked through the following tutorial/module in order to better understand se
 We made significant progress in working through exploit tutorials on Exploit Exercises, namely Protostar (linked above). Individually, we each completed all of the Stack and Format tutorials as well as some of the Heap tutorials, with periodic meetings to come together and discuss what we had learned. After also reading some papers discussing stack overflows, we started becoming familiar with memory layout and low-level C execution.
 At some point in the middle of the Heap tutorials, we both came to the same conclusion that we were learning a great deal, but with the way we were headed there wasn’t really any sort of tangible deliverable or practical use for where our learning was taking us. Stack overflows and Heap overflows can teach one a lot about how memory works in C, but given their pervasive nature even the most basic programs come with a level of encryption and protection that exceeds the scope of this project. After some deliberation, we decided that it was better to pivot slightly to focus more on how memory worked in C code execution rather figuring out how to use this knowledge to exploit vulnerabilities. It was suggested to us that coroutines was a practical and helpful use of memory management in code execution. Therefore we channeled our efforts into learning more about coroutines and memory management in the stack/heap. After understanding how the multitasking process in coroutines functioned, we decided to try and implemented our own coroutine on a simplified scale.
 We were able to successfully implement a coroutine. The basic structure of the program that we created looked like this:
-![General Program Flow](https://github.com/adeaver/SoftSysC-nanigans/tree/master/images/Structure.png)
+![General Program Flow](../images/Structure.png?raw=True)
 
 To accomplish this, we had to implement two functions that were inspired by the setjmp library in C. The first function was called setjmp. The point of setjmp is to read a the value for a buffer (while resetting it) and then capture the return address, so the program knows where to jump back to. In the C library, setjmp is architecture dependent and is actually implemented as a macro, not a function. Below is our implementation of setjmp (called setjmp_simple):
 
@@ -62,7 +62,7 @@ setjmp_simple(bufferA, val);
 
 Given the two halves of the code shown and the flow of execution chart above, put together into a comprehensive script called coroutines_simple.c results in the output below:
 
-![Program Output](https://github.com/adeaver/SoftSysC-nanigans/tree/master/images/Output.png)
+![Program Output](../images/Output.png?raw=True)
 
 As you can see, our coroutines script can successfully jump between two different functions or “routines”, much like the originally created set_jmp and long_jmp can.
 A really interesting problem that we encountered while working on this project was that we’d occasionally “lose” the return pointer. That is, sometimes we had complicated the stack so much that the compiler was unable to return to the correct location. For this reason, we often had to explicitly tell the compiler where to return. This resulted in a lot of code that looked like this:
@@ -72,7 +72,7 @@ void (*foo)(void) = __builtin_return_address(2);
 foo();
 ```
 
-![Stack](https://github.com/adeaver/SoftSysC-nanigans/tree/master/images/Stackframe.png)
+![Stack](../images/Stackframe.png?raw=True)
 
 #### Reflection
 
