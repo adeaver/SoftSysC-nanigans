@@ -48,13 +48,18 @@ void __setjmp_simple(jump_buf_simple *buffer) {
 ```
 
 You can see that the function __setjmp_simple takes in a buffer, which will be talked about later, and grabs the base pointer for the current function, which is known as rbp. We get the return address by moving 8 bytes up from the location of rbp because we just allocated an 8 byte integer.  This required us to use a bit of embedded assembly. The macro calls this function and assigns the current value of the buffer to an output variable and resets it. This is also how the setjmp macro works in the library.
-The other part of our implementation required jumping back to this return pointer. This was actually fairly easy to do. In the code above, you can see that we assigned the pointer to a void function type inside of the buffer struct, which is shown below. This generates a warning because we’re manually setting the address of this function by assigning the integer value directly to the pointer. But once we do that, we can jump back to the return address by simply calling the function.
+
+The other part of our implementation required jumping back to this return pointer. This was actually fairly easy to do. In the code above, you can see that we assigned the pointer to a void function type inside of the buffer struct, which is shown below. This generates a warning because we’re manually setting the address of this function by assigning the integer value directly to the pointer. But once we do that, we can jump back to the return address by simply calling the function later on in the program.
 
 ```
 typedef struct {
 	int data;
 	void (*sp)(void);
 } jump_buf_simple;
+
+.
+.
+.
 
 setjmp_simple(bufferA, val);
 	if(!val) bufferB->sp();
