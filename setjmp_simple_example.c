@@ -29,8 +29,9 @@ jump_buf_simple *make_jump_buffer() {
  * for the data in the buffer. We implemented it like this because when returning
  * a value, the return address gets overwritten, so we were getting a segmentation fault. 
  */
-void setjmp_simple(jump_buf_simple *buffer) {
+void __setjmp_simple(jump_buf_simple *buffer) {
 	uint64_t sp;
+	// It's 8(rbp) because we just allocated an 8 byte int
     asm("movq 8(%%rbp), %0"
 			:"=r" (sp));
 	puts("Inside setjmp_simple");
@@ -38,18 +39,21 @@ void setjmp_simple(jump_buf_simple *buffer) {
 	//buffer->sp = __builtin_return_address(0); // Alternate solution
 }
 
+#define setjmp_simple(buffer, output) __setjmp_simple(buffer); output = buffer->data; buffer->data = 0; 
+
 // The following functions are our routines
 void routineA() {
 	puts("Starting A");
-	bufferA = make_jump_buffer(); 
-	setjmp_simple(bufferA);
+	bufferA = make_jump_buffer();
+	int val;	
+	setjmp_simple(bufferA, val);
 
-	if(!bufferA->data) routineB();
+	if(!val) routineB();
 
 	puts("Setting B");
 	bufferB->data=1;
-	setjmp_simple(bufferA);
-	if(bufferA->data) bufferB->sp();
+	setjmp_simple(bufferA, val);
+	if(!val) bufferB->sp();
 
 	puts("Finished A");
 	
@@ -62,11 +66,12 @@ void routineB() {
 	bufferB = make_jump_buffer();
 	bufferA->data = 1;
 
-	setjmp_simple(bufferB);
-	if(!bufferB->data) bufferA->sp();
+	int val;
+	setjmp_simple(bufferB, val);
+	if(!val) bufferA->sp();
 
 	puts("Finished B, Setting A");
-	bufferA->data = 0;
+	bufferA->data = 1;
 	bufferA->sp();
 	
 	puts("This should never print");	
